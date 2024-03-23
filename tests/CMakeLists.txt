@@ -1,4 +1,4 @@
-﻿add_executable(LestaInternCPPTest "LestaInternCPPTest.cpp" "LestaInternCPPTest.h")
+﻿add_executable(LestaInternCPPTest "MixedSortBenchmark.cpp" "MixedSortBenchmark.h")
 target_link_libraries(LestaInternCPPTest PUBLIC CircularBuffArray DivisionByTwo)
 
 add_executable(Tests
@@ -7,6 +7,9 @@ add_executable(Tests
   DivisionByTwoTests.cpp
   MixedSortTests.cpp
  )
+
+ add_executable(MixedSortBenchmark MixedSortBenchmark.cpp MixedSortBenchmark.h)
+ target_link_libraries(MixedSortBenchmark PRIVATE MixedSort)
 
 include(FetchContent)
 option(INSTALL_GTEST OFF)
@@ -22,7 +25,6 @@ FetchContent_MakeAvailable(googletest)
 
 target_link_libraries(Tests PRIVATE
   gtest_main
-  gmock_main
   CircularBuffArray
   CircularBuffList
   DivisionByTwo
