@@ -1,6 +1,5 @@
 #pragma once
 #include <thread>
-#include <execution>
 
 template <class T>
 void InsertionSort(T* array, const size_t startIndex, const size_t endIndex) {
@@ -17,37 +16,28 @@ void InsertionSort(T* array, const size_t startIndex, const size_t endIndex) {
 }
 
 template <class T>
-void Merge(T* array, const size_t start, const size_t mid, const size_t end) {
-  auto length = end - start + 1;
-  auto copy = new T[length]();
-
-  for (size_t i = 0, j = start; j <= end; i++, j++)
-    copy[i] = array[j];
+void Merge(T* array, T* helper, const size_t start, const size_t mid, const size_t end) {
   
-  size_t i = start;
-  size_t indexFirst = 0;
-  size_t indexSecond = mid - start;
-  while (indexFirst < mid - start && indexSecond < length)
+  size_t i = start,
+    indexFirst = start,
+    indexSecond = mid + 1;
+  while (indexFirst <= mid && indexSecond <= end)
   {
-    if (copy[indexFirst] < copy[indexSecond]) {
-      array[i] = copy[indexFirst];
-      indexFirst++;
-    }
-    else {
-      array[i] = copy[indexSecond];
-      indexSecond++;
-    }
-    i++;
+    if (helper[indexFirst] < helper[indexSecond])
+      array[i++] = helper[indexFirst++];
+    else
+      array[i++] = helper[indexSecond++];
   }
 
-  if (indexSecond < length)
+  if (indexSecond <= end)
     for (;i <= end; i++, indexSecond++)
-      array[i] = copy[indexSecond];
+      array[i] = helper[indexSecond];
   else
     for (;i <= end; i++, indexFirst++)
-      array[i] = copy[indexFirst];
+      array[i] = helper[indexFirst];
 
-  delete[] copy;
+  for (size_t i = start; i <= end; i++)
+    helper[i] = array[i];
 }
 
 
@@ -59,33 +49,45 @@ int GetSortConcurrencyDepth()
 template <class T>
 void MixedSort(T* array, const size_t size, const size_t insertionSortTreshold = 64,
   int concurrencyDepth = GetSortConcurrencyDepth()) {
-  if (size > insertionSortTreshold)
-    MergeSort(array, 0, size - 1, concurrencyDepth);
-  else
+
+  if (array == nullptr)
+    return;
+
+  if (size <= insertionSortTreshold)
+  {
     InsertionSort(array, 0, size - 1);
+    return;
+  }
+
+  auto helper = new T[size]();
+  for (size_t i = 0; i < size; i++)
+    helper[i] = array[i];
+
+  MergeSort(array, helper, 0, size - 1, concurrencyDepth);
+  delete[] helper;
 }
 
 template <class T>
-void MergeSort(T* array, const size_t start = 0, const size_t end = 0, int concurrencyDepth = GetSortConcurrencyDepth()) {
+void MergeSort(T* array, T* helper, const size_t start = 0, const size_t end = 0, int concurrencyDepth = GetSortConcurrencyDepth()) {
   if (start == end)
     return;
   
   size_t mid = start + (end - start) / 2;
   if (concurrencyDepth > 0)
   {
-    auto leftSortThread = std::thread(&MergeSort<T>, array, start, mid, concurrencyDepth - 1);
-    auto rightSortThread = std::thread(&MergeSort<T>, array, mid + 1, end, concurrencyDepth - 1);
+    auto leftSortThread = std::thread(&MergeSort<T>, array, helper, start, mid, concurrencyDepth - 1);
+    auto rightSortThread = std::thread(&MergeSort<T>, array, helper, mid + 1, end, concurrencyDepth - 1);
 
     leftSortThread.join();
     rightSortThread.join();
   }
   else
   {
-    MergeSort(array, start, mid, concurrencyDepth);
-    MergeSort(array, mid + 1, end, concurrencyDepth);
+    MergeSort(array, helper, start, mid, concurrencyDepth);
+    MergeSort(array, helper, mid + 1, end, concurrencyDepth);
   }
   
-  Merge(array, start, mid + 1, end);
+  Merge(array, helper, start, mid, end);
 }
 
 template <class T>

@@ -11,6 +11,15 @@
     EXPECT_TRUE(isEvenBit(-42));
   }
 
+  TEST(DivisionByTwoTests, IsEvenTemplate_Works)
+  {
+    EXPECT_TRUE(IsEvenTemplate<0>().value);
+    EXPECT_TRUE(IsEvenTemplate <22>().value);
+    EXPECT_FALSE(IsEvenTemplate <53>().value);
+    EXPECT_FALSE(IsEvenTemplate <-11>().value);
+    EXPECT_TRUE(IsEvenTemplate <-42>().value);
+  }
+
   TEST(DivisionByTwoTests, IsEvenShift_Works)
   {
     EXPECT_TRUE(isEvenShift(0));

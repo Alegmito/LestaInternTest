@@ -7,21 +7,14 @@
 #include <vector>
 #include <cstdarg>
 
-template <typename F, typename ...Args>
-auto apply(F&& function, Args&&... arguments)
--> decltype(function(std::forward<Args>(arguments)...))
-{
-  return function(std::forward<Args>(arguments)...);
-}
-
-template </*typename TDuration = std::chrono::seconds, */typename Func, typename ...Args>
+template <typename Func, typename ...Args>
 auto measureTimeExecution(Func&& func, Args&&... args)
 {
   auto start = std::chrono::high_resolution_clock::now();
   func(args...);
   auto end = std::chrono::high_resolution_clock::now();
 
-  return std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  return std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 }
 
 std::vector<int> CreateArrayToSort(size_t size)
@@ -43,32 +36,27 @@ void RunMixedSortBenchmark(size_t size = 64)
   auto twoThreads = CreateArrayToSort(size);
   auto maxThreads = CreateArrayToSort(size);
 
-  std::chrono::milliseconds timeInsertion;
-  if (size <= 100000)
-  {
+  std::chrono::microseconds timeInsertion;
+  if (size <= 100'000)
 	timeInsertion = measureTimeExecution(MixedSort<int>, insertion.data(), size, size, 0);
-  }
+
   auto timeNoInsertion = measureTimeExecution(MixedSort<int>, noInsertion.data(), size, 0, 0);
   auto timeTwoThreads = measureTimeExecution(MixedSort<int>, twoThreads.data(), size, 0, 1);
   auto timeMaxThreads = measureTimeExecution(MixedSort<int>, maxThreads.data(), size, 0, GetSortConcurrencyDepth());
 
   cout << "Benchmark for size: " << size << endl;
-  cout << "With insertion sort: " << timeInsertion.count() << " millieconds" << endl;
-  cout << "Ordinary merge sort: " << timeNoInsertion.count() << " milliseconds" << endl;
-  cout << "Two threaded merge sort: " << timeTwoThreads.count() << " milliseconds" << endl;
-  cout << "Max threaded merge sort: " << timeMaxThreads.count() << " milliseconds" << endl;
+  if (size <= 100'000)
+	cout << "With insertion sort: " << timeInsertion.count() / std::pow(10, 3) << " millieconds" << endl;
+  else
+	cout << "With insertion sort: " << "too long" << endl;
+  cout << "Ordinary merge sort: " << timeNoInsertion.count() / std::pow(10, 3) << " milliseconds" << endl;
+  cout << "Two threaded merge sort: " << timeTwoThreads.count() / std::pow(10, 3) << " milliseconds" << endl;
+  cout << "Max threaded merge sort: " << timeMaxThreads.count() / std::pow(10, 3) << " milliseconds" << endl;
 }
 
 int main()
 {
-	cout << "Hello CMake." << endl;
-    const auto numberOfElements = 2;
-
-	auto fun = [](std::string a, std::string const& b) { return a += b; };
-	auto result = "Hello world";
-	std::string s("world");
-
-	vector<size_t> benchmarkSizes = { 10000, 100000/*, 10000000*/ };
+	vector<size_t> benchmarkSizes = {  64, 1'000, 10'000, 100'000, 10'000'000, 100'000'000 };
 
 	for (size_t& benchmarkSize: benchmarkSizes)
 	{

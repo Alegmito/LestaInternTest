@@ -20,7 +20,7 @@ namespace SortTests {
 
   TEST(SortTests, MergeSort_Works_WithNullptr)
   {
-    MergeSort<int>(nullptr);
+    MixedSort<int>(nullptr, 0);
     SUCCEED();
   }
 
